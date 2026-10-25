@@ -1,0 +1,1 @@
+{"name":"livelab-schedule-workdesk","version":"0.2.0","private":true,"type":"module","scripts":{"build":"node scripts/build.mjs","dev":"node scripts/dev.mjs","db:generate":"drizzle-kit generate","test":"node --test scripts/*.test.mjs"},"dependencies":{"qrcode":"1.5.4"},"devDependencies":{"drizzle-kit":"0.31.10","drizzle-orm":"0.45.2"}}
