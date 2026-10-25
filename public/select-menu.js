@@ -1,0 +1,33 @@
+// Keep native form values and validation while presenting one searchable menu.
+const controls=new Map();let nextId=0,active=null;
+const labelText=select=>select.getAttribute('aria-label')||select.closest('label')?.querySelector('.bi')?.textContent||'Choose / 请选择';
+function closeMenu(focus=false){if(!active)return;const current=active;active=null;current.panel.hidePopover();current.button.setAttribute('aria-expanded','false');if(focus&&current.button.isConnected)current.button.focus()}
+function enhance(select){
+ if(controls.has(select)||select.multiple||select.size>1)return;
+ const wrapper=document.createElement('span');wrapper.className='select-control';select.before(wrapper);wrapper.append(select);select.classList.add('select-native');select.tabIndex=-1;select.setAttribute('aria-hidden','true');
+ const button=document.createElement('button');button.type='button';button.className='select-trigger';button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
+ const value=document.createElement('span');value.className='select-value';const arrow=document.createElement('span');arrow.className='select-chevron';arrow.setAttribute('aria-hidden','true');button.append(value,arrow);wrapper.append(button);
+ const panel=document.createElement('div');panel.className='select-menu';panel.setAttribute('popover','auto');
+ const search=document.createElement('input');search.type='search';search.className='select-search';search.placeholder=select.dataset.field==='memberId'?'Type a name / 输入姓名搜索':'Type to search / 输入搜索';search.setAttribute('aria-label',search.placeholder);search.autocomplete='off';search.setAttribute('role','combobox');search.setAttribute('aria-autocomplete','list');search.setAttribute('aria-expanded','true');
+ const list=document.createElement('div');list.className='select-options';list.id='select-options-'+ ++nextId;list.setAttribute('role','listbox');list.setAttribute('aria-label',labelText(select));button.setAttribute('aria-controls',list.id);search.setAttribute('aria-controls',list.id);
+ panel.append(search,list);wrapper.append(panel);
+ const c={select,wrapper,button,value,panel,search,list,results:[],index:0};controls.set(select,c);
+ function sync(){const text=select.selectedOptions[0]?.textContent||'Choose / 请选择';if(value.textContent!==text)value.textContent=text;button.disabled=select.disabled;button.setAttribute('aria-label',labelText(select)+': '+text);button.setAttribute('aria-required',String(select.required));button.classList.toggle('is-placeholder',!select.value)}
+ function highlight(){[...list.children].forEach((el,i)=>el.classList.toggle('is-highlighted',i===c.index));const item=list.children[c.index];if(item){search.setAttribute('aria-activedescendant',item.id);item.scrollIntoView({block:'nearest'})}else search.removeAttribute('aria-activedescendant')}
+ function choose(option){select.value=option.value;closeMenu(true);select.dispatchEvent(new Event('change',{bubbles:true}));sync()}
+ function draw(){const query=search.value.trim().toLocaleLowerCase();c.results=[...select.options].filter(o=>!o.disabled&&!o.hidden&&(o.value==='__new__'||!query||o.textContent.toLocaleLowerCase().includes(query)));list.replaceChildren();c.results.forEach((option,i)=>{const item=document.createElement('button');item.type='button';item.className='select-option'+(option.value==='__new__'?' select-create':'');item.id=list.id+'-'+i;item.setAttribute('role','option');item.setAttribute('aria-selected',String(option.selected));item.tabIndex=-1;const parts=option.textContent.split(' / ');const text=document.createElement('span');text.textContent=parts[0];item.append(text);if(parts.length>1){const small=document.createElement('small');small.lang='zh-CN';small.textContent=parts.slice(1).join(' / ');item.append(small)}item.addEventListener('click',e=>{e.preventDefault();choose(option)});list.append(item)});if(!c.results.length){const empty=document.createElement('div');empty.className='select-empty';empty.textContent='No matches / 没有匹配结果';list.append(empty)}c.index=Math.max(0,c.results.findIndex(o=>o.selected));highlight()}
+ function open(){if(active===c){closeMenu();return}closeMenu();sync();search.value='';search.hidden=select.options.length<7&&select.dataset.search!=='true'&&!/entity-select|employee-name|filter-pm|filter-project/.test(select.id)&&!['projectId','roomId','pm'].includes(select.name);active=c;button.setAttribute('aria-expanded','true');panel.showPopover();draw();positionMenu();if(!search.hidden)search.focus();else button.focus()}
+ c.sync=sync;c.open=open;
+ button.addEventListener('click',e=>{e.preventDefault();open()});
+ const keyboard=e=>{if(e.key==='Escape'&&active===c){e.preventDefault();e.stopPropagation();closeMenu(true);return}if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();if(active!==c)open();else{c.index=(c.index+(e.key==='ArrowDown'?1:-1)+c.results.length)%Math.max(1,c.results.length);highlight()}}else if(e.key==='Enter'&&active===c){e.preventDefault();if(c.results[c.index])choose(c.results[c.index])}else if(e.key==='Tab'&&active===c)closeMenu()};
+ search.addEventListener('input',draw);search.addEventListener('keydown',keyboard);button.addEventListener('keydown',keyboard);
+ panel.addEventListener('toggle',()=>{if(!panel.matches(':popover-open')){button.setAttribute('aria-expanded','false');if(active===c)active=null}});
+ select.addEventListener('change',sync);select.addEventListener('invalid',e=>{e.preventDefault();button.focus();if(!active)open()});sync();
+}
+function positionMenu(){if(!active)return;const {button,panel}=active,r=button.getBoundingClientRect(),margin=12;panel.style.width=Math.min(Math.max(r.width,240),innerWidth-margin*2)+'px';panel.style.left=Math.max(margin,Math.min(r.left,innerWidth-panel.offsetWidth-margin))+'px';const below=innerHeight-r.bottom-margin,above=r.top-margin;const up=below<240&&above>below;panel.style.maxHeight=Math.max(120,Math.min(360,up?above:below)-8)+'px';panel.style.top=(up?Math.max(margin,r.top-panel.offsetHeight-8):r.bottom+8)+'px'}
+function refresh(){for(const [select,c] of controls){if(!select.isConnected){if(active===c)closeMenu();controls.delete(select)}else c.sync()}document.querySelectorAll('select').forEach(enhance)}
+new MutationObserver(refresh).observe(document.body,{childList:true,subtree:true});
+window.addEventListener('resize',positionMenu);document.addEventListener('scroll',()=>{if(active&&!active.panel.contains(document.activeElement))positionMenu()},true);
+document.addEventListener('pointerdown',e=>{if(active&&!active.wrapper.contains(e.target))closeMenu()});
+document.addEventListener('close',e=>{if(active&&e.target.contains(active.wrapper))closeMenu()},true);
+refresh();
