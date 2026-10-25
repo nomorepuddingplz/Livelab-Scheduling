@@ -1,0 +1,69 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1790966553098,
+      "tag": "0000_chunky_shinko_yamashiro",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790970660608,
+      "tag": "0001_nasty_speed",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790970813418,
+      "tag": "0002_scheduling_guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791073500000,
+      "tag": "0003_project_colors",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791073500001,
+      "tag": "0004_project_pm_directory",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791073500002,
+      "tag": "0005_conflicts_as_alerts",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791073500003,
+      "tag": "0006_download_files",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1791073500004,
+      "tag": "0007_event_cancel_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1791073500005,
+      "tag": "0008_availability_notes",
+      "breakpoints": true
+    }
+  ]
+}
